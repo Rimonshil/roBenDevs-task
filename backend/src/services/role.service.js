@@ -1,8 +1,8 @@
 const httpStatus = require('http-status');
-const { getOffset } = require('../utils/query');
-const ApiError = require('../utils/ApiError');
+const { getOffset } = require('../utils/query.js');
+const ApiError = require('../utils/ApiError.js');
 const config = require('../config/config.js');
-const db = require('../db/models');
+const db = require('../db/models/index.js');
 
 async function getRoleById(roleId) {
 	const role = await db.role.findOne({

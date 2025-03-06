@@ -1,10 +1,10 @@
 const httpStatus = require('http-status');
-const { getOffset } = require('../utils/query');
-const ApiError = require('../utils/ApiError');
-const { encryptData } = require('../utils/auth');
+const { getOffset } = require('../utils/query.js');
+const ApiError = require('../utils/ApiError.js');
+const { encryptData } = require('../utils/auth.js');
 const config = require('../config/config.js');
-const db = require('../db/models');
-const roleService = require('./role.service');
+const db = require('../db/models/index.js');
+const roleService = require('./role.service.js');
 
 async function getUserByEmail(email) {
 	const user = await db.user.findOne({
