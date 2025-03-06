@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1  # Number of pods to start with
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: 6164118899/robendevs-backend
+        ports:
+        - containerPort: 3000
+        env:
+        - name: SQL_USERNAME
+          value: "postgres"
+        - name: SQL_HOST
+          value: "db-service"
+        - name: SQL_DATABASE_NAME
+          value: "postgres"
+        - name: SQL_PASSWORD
+          value: "password"
+        - name: SQL_DIALECT
+          value: "postgres"
+        resources:
+          requests:  # Minimum resources guaranteed for the pod
+            cpu: "100m"    # 0.1 CPU
+            memory: "256Mi" # 256MB RAM
+          limits:  # Maximum resources allowed for the pod
+            cpu: "500m"    # 0.5 CPU
+            memory: "512Mi" # 512MB RAM
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1          
+      maxUnavailable: 1    
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: LoadBalancer
+
