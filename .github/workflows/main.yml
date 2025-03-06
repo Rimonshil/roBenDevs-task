@@ -52,6 +52,7 @@ jobs:
 
     # Retrieve the last stable image tag for rollback
     - name: Get previous image tag
+      working-directory: frontend
       id: get_previous_tag
       run: |
         if docker manifest inspect ${{ secrets.DOCKER_USERNAME }}/frontend:latest > /dev/null 2>&1; then
@@ -68,7 +69,7 @@ jobs:
     - name: Build and push frontend image
       uses: docker/build-push-action@v5
       with:
-        context: .
+        context: ./frontend
         push: true
         tags: |
           ${{ secrets.DOCKER_USERNAME }}/frontend:latest
