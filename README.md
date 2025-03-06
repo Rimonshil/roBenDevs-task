@@ -1,28 +1,29 @@
-Project Deployment
+# Project Deployment
 
-File Structure
+## File Structure
 
+```bash
 project-root/
-│-- backend/
+├── backend/
 │   ├── deployment/
-│-- frontend/
+    ├── dockefile/
+├── frontend/
 │   ├── deployment/
+    ├── dockefile/
+├── terraform/
+├── docker-compose.yaml/
 
-Backend Deployment Files: Located in backend/deployment
+```
 
-Frontend Deployment Files: Located in frontend/deployment
+## Deployment Instructions
 
-Deployment Instructions
+```bash
+# Navigate to backend deployment
+cd backend/deployment
 
-Navigate to the appropriate deployment directory:
+# Navigate to frontend deployment
+cd frontend/deployment
+```
 
-cd backend/deployment  # For backend
-cd frontend/deployment # For frontend
 
-Execute deployment scripts or commands as required.
 
-Notes
-
-Ensure all configurations are properly set before deploying.
-
-Check logs in case of deployment failures.
