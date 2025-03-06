@@ -1,0 +1,86 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches:
+      - main  # Trigger the action only on pushes to the main branch
+  pull_request:
+    branches:
+      - main  # Trigger on pull request events
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the code from the repository
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Use caching for npm dependencies
+    - name: Cache Node.js dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    # Set up Node.js for frontend and backend
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
+    # Install dependencies and run unit tests for frontend
+    - name: Install and test frontend
+      working-directory: .
+      run: |
+        npm i
+        npm test
+
+    # Set up Docker Buildx for multi-platform builds
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    # Log into Docker Hub (or GitHub Container Registry)
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    # Retrieve the last stable image tag for rollback
+    - name: Get previous image tag
+      id: get_previous_tag
+      run: |
+        if docker manifest inspect ${{ secrets.DOCKER_USERNAME }}/frontend:latest > /dev/null 2>&1; then
+          echo "PREV_TAG=success" >> $GITHUB_ENV
+        else
+          echo "PREV_TAG=fail" >> $GITHUB_ENV
+        fi
+
+    # Print PREV_TAG for debugging
+    - name: Print PREV_TAG
+      run: echo "PREV_TAG is $PREV_TAG"
+
+    # Build and push frontend Docker image with cache
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/frontend:latest
+          ${{ secrets.DOCKER_USERNAME }}/frontend:${{ github.sha }}
+        cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/frontend:latest
+        cache-to: type=inline
+
+    # Rollback if the new image fails (example strategy)
+    - name: Rollback on failure
+      if: failure() && env.PREV_TAG == 'success'
+      run: |
+        echo "Rolling back to the previous version..."
+        docker pull ${{ secrets.DOCKER_USERNAME }}/frontend:latest
+        docker tag ${{ secrets.DOCKER_USERNAME }}/frontend:latest ${{ secrets.DOCKER_USERNAME }}/frontend:rollback
+        docker push ${{ secrets.DOCKER_USERNAME }}/frontend:rollback
